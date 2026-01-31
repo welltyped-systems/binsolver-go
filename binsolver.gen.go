@@ -26,10 +26,27 @@ const (
 	Separate     GroupMode = "separate"
 )
 
+// Defines values for NestedPlacementRotation.
+const (
+	NestedPlacementRotationXyz NestedPlacementRotation = "xyz"
+	NestedPlacementRotationXzy NestedPlacementRotation = "xzy"
+	NestedPlacementRotationYxz NestedPlacementRotation = "yxz"
+	NestedPlacementRotationYzx NestedPlacementRotation = "yzx"
+	NestedPlacementRotationZxy NestedPlacementRotation = "zxy"
+	NestedPlacementRotationZyx NestedPlacementRotation = "zyx"
+)
+
 // Defines values for PackRequestLabelFormat.
 const (
 	PackRequestLabelFormatNone PackRequestLabelFormat = "none"
 	PackRequestLabelFormatZpl  PackRequestLabelFormat = "zpl"
+)
+
+// Defines values for PackRequestNestingStrategy.
+const (
+	PackRequestNestingStrategyAuto     PackRequestNestingStrategy = "auto"
+	PackRequestNestingStrategyMaximize PackRequestNestingStrategy = "maximize"
+	PackRequestNestingStrategyNone     PackRequestNestingStrategy = "none"
 )
 
 // Defines values for PackRequestObjective.
@@ -54,22 +71,22 @@ const (
 
 // Defines values for RotationMode.
 const (
-	RotationModeAny     RotationMode = "any"
-	RotationModeAxis    RotationMode = "axis"
-	RotationModeCustom  RotationMode = "custom"
-	RotationModeNoFlip  RotationMode = "noFlip"
-	RotationModeNone    RotationMode = "none"
-	RotationModeUpright RotationMode = "upright"
+	Any     RotationMode = "any"
+	Axis    RotationMode = "axis"
+	Custom  RotationMode = "custom"
+	NoFlip  RotationMode = "noFlip"
+	None    RotationMode = "none"
+	Upright RotationMode = "upright"
 )
 
 // Defines values for RotationRulesInputAllowed.
 const (
-	RotationRulesInputAllowedXyz RotationRulesInputAllowed = "xyz"
-	RotationRulesInputAllowedXzy RotationRulesInputAllowed = "xzy"
-	RotationRulesInputAllowedYxz RotationRulesInputAllowed = "yxz"
-	RotationRulesInputAllowedYzx RotationRulesInputAllowed = "yzx"
-	RotationRulesInputAllowedZxy RotationRulesInputAllowed = "zxy"
-	RotationRulesInputAllowedZyx RotationRulesInputAllowed = "zyx"
+	Xyz RotationRulesInputAllowed = "xyz"
+	Xzy RotationRulesInputAllowed = "xzy"
+	Yxz RotationRulesInputAllowed = "yxz"
+	Yzx RotationRulesInputAllowed = "yzx"
+	Zxy RotationRulesInputAllowed = "zxy"
+	Zyx RotationRulesInputAllowed = "zyx"
 )
 
 // BinInput defines model for BinInput.
@@ -198,6 +215,60 @@ type ItemInput struct {
 	Weight *float64 `json:"weight,omitempty"`
 }
 
+// NestedPlacement defines model for NestedPlacement.
+type NestedPlacement struct {
+	// D Packed depth (includes item padding if provided).
+	D float64 `json:"d"`
+
+	// H Packed height (includes item padding if provided).
+	H float64 `json:"h"`
+
+	// ItemId Item identifier for this placement.
+	ItemId string `json:"itemId"`
+
+	// Rotation Applied rotation permutation.
+	Rotation NestedPlacementRotation `json:"rotation"`
+
+	// W Packed width (includes item padding if provided).
+	W float64 `json:"w"`
+
+	// X X coordinate of the placement origin (relative to container).
+	X float64 `json:"x"`
+
+	// Y Y coordinate of the placement origin (relative to container).
+	Y float64 `json:"y"`
+
+	// Z Z coordinate of the placement origin (relative to container).
+	Z float64 `json:"z"`
+}
+
+// NestedPlacementRotation Applied rotation permutation.
+type NestedPlacementRotation string
+
+// NestingRulesInput Internal cavity definition for nesting.
+type NestingRulesInput struct {
+	// AllowHazmat If false, hazmat items cannot be nested inside this cavity. Defaults to true.
+	AllowHazmat *bool `json:"allowHazmat,omitempty"`
+
+	// AllowedGroups If set, only items whose packaging.group is in this list may be nested.
+	AllowedGroups *[]string `json:"allowedGroups,omitempty"`
+
+	// InnerD Inner cavity depth (Z axis).
+	InnerD float64 `json:"innerD"`
+
+	// InnerH Inner cavity height (Y axis).
+	InnerH float64 `json:"innerH"`
+
+	// InnerW Inner cavity width (X axis).
+	InnerW float64 `json:"innerW"`
+
+	// MaxWeight Maximum total weight allowed inside this cavity.
+	MaxWeight *float64 `json:"maxWeight,omitempty"`
+
+	// Padding Padding/clearance values (all sets defaults for x/y/z).
+	Padding *PaddingInput `json:"padding,omitempty"`
+}
+
 // PackRequest defines model for PackRequest.
 type PackRequest struct {
 	// AllowUnplaced When false, the request fails if any item cannot be placed. Defaults to true.
@@ -215,6 +286,9 @@ type PackRequest struct {
 	// LabelFormat If 'zpl', generates a ZPL label string for each bin. (Paid plan only) Defaults to 'none'.
 	LabelFormat *PackRequestLabelFormat `json:"labelFormat,omitempty"`
 
+	// NestingStrategy Controls pre-pack nesting. auto uses the main objective to decide nesting; maximize fills cavities first; none disables nesting. Defaults to 'auto'.
+	NestingStrategy *PackRequestNestingStrategy `json:"nestingStrategy,omitempty"`
+
 	// Objective Packing objective (speed, bins used, placed count, waste minimization, cost, or shipping). minCost requires bin cost values; shipping requires bin shipping profiles. Defaults to 'fast'.
 	Objective *PackRequestObjective `json:"objective,omitempty"`
 
@@ -227,6 +301,9 @@ type PackRequest struct {
 
 // PackRequestLabelFormat If 'zpl', generates a ZPL label string for each bin. (Paid plan only) Defaults to 'none'.
 type PackRequestLabelFormat string
+
+// PackRequestNestingStrategy Controls pre-pack nesting. auto uses the main objective to decide nesting; maximize fills cavities first; none disables nesting. Defaults to 'auto'.
+type PackRequestNestingStrategy string
 
 // PackRequestObjective Packing objective (speed, bins used, placed count, waste minimization, cost, or shipping). minCost requires bin cost values; shipping requires bin shipping profiles. Defaults to 'fast'.
 type PackRequestObjective string
@@ -261,6 +338,9 @@ type PackStats struct {
 	// Items Total items requested (after quantity expansion).
 	Items int `json:"items"`
 
+	// Nested Number of items nested inside other items.
+	Nested *int `json:"nested,omitempty"`
+
 	// PalletsUsed Number of pallets used (if palletization enabled).
 	PalletsUsed *int `json:"palletsUsed,omitempty"`
 
@@ -287,6 +367,12 @@ type PackagingRulesInput struct {
 
 	// Hazmat Marks item as hazardous; requires allowHazmat=true on bins.
 	Hazmat *bool `json:"hazmat,omitempty"`
+
+	// Nestable When false, this item cannot be nested inside other items. Defaults to true.
+	Nestable *bool `json:"nestable,omitempty"`
+
+	// Nesting Internal cavity definition for nesting.
+	Nesting *NestingRulesInput `json:"nesting,omitempty"`
 
 	// Padding Padding/clearance values (all sets defaults for x/y/z).
 	Padding *PaddingInput `json:"padding,omitempty"`
@@ -326,6 +412,9 @@ type Placement struct {
 
 	// ItemId Item identifier for this placement.
 	ItemId string `json:"itemId"`
+
+	// Nested Items packed inside this item (if nesting was used). Coordinates are relative to the item's local origin.
+	Nested *[]NestedPlacement `json:"nested,omitempty"`
 
 	// Rotation Applied rotation permutation.
 	Rotation PlacementRotation `json:"rotation"`
